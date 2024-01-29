@@ -1,0 +1,12 @@
+#!/command/with-contenv bash
+# shellcheck shell=bash
+
+# permissions
+chown -R disty:disty \
+    /var/run/redis
+
+chown -R disty:disty \
+    /config/redis
+
+chown -R disty:disty \
+    /etc/redis

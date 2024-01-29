@@ -1,0 +1,15 @@
+#!/usr/bin/with-contenv bash
+# shellcheck shell=bash
+
+# Load Generic Libraries
+. /defaults/scripts/liblog.sh
+
+echo "$info ==> -- Starting Redis --"
+
+if pgrep -f "[r]edis-server" >/dev/null; then
+    echo "$warn ==> Zombie redis processes still active, sending SIGKILL"
+    redis-cli shutdown
+    sleep 1
+fi
+
+exec s6-setuidgid disty /usr/bin/redis-server /etc/redis/redis.conf
