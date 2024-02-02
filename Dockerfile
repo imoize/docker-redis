@@ -6,7 +6,7 @@ ARG TARGETVARIANT
 # install packages
 RUN \
 apk add --no-cache \
-    redis=7.2.4-r0 \
+    redis \
 # cleanup
     rm -rf \
     /tmp/* \
