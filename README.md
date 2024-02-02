@@ -37,7 +37,7 @@ services:
       - PUID=1001
       - PGID=1001
       - TZ=Asia/Jakarta
-      - ALLOW_EMPTY_PASSWORD=no
+      - ALLOW_EMPTY_PASSWORD=yes
     restart: always
 ```
 
@@ -49,10 +49,24 @@ docker run -d \
   -e PUID=1001 \
   -e PGID=1001 \
   -e TZ=Asia/Jakarta \
-  -e ALLOW_EMPTY_PASSWORD=no \
+  -e ALLOW_EMPTY_PASSWORD=yes \
   --restart always \
   imoize/redis:latest
 ```
+
+## Available environment variables:
+
+| Name                      | Description                                            | Default Value |
+| ------------------------- | ------------------------------------------------------ | ------------- |
+| PUID                      | User UID                                               |               |
+| PGID                      | Group GID                                              |               |
+| TZ                        | Specify a timezone see this [list](https://en.wikipedia.org/wiki/List_of_tz_database_time_zones#List).       | UTC          |
+| S6_VERBOSITY              | Controls the verbosity of s6-rc. See [this.](https://github.com/just-containers/s6-overlay?tab=readme-ov-file#customizing-s6-overlay-behaviour)    | 1             |
+| ALLOW_EMPTY_PASSWORD      | Allow password-less access                             | no            |
+| REDIS_PASSWORD            | Setting the server password on first run.              |               |
+| EXTRA_FLAGS               | Add extra command-line flags to redis-server startup.  |               |
+
+**NOTE:** The at sign (@) is not supported for REDIS_PASSWORD
 
 ## Configuration
 
@@ -67,7 +81,7 @@ redis:
     ...
     environment:
       - PUID=1001
-      - ALLOW_EMPTY_PASSWORD=no
+      - ALLOW_EMPTY_PASSWORD=yes
     ...
 ```
 
@@ -76,26 +90,44 @@ redis:
 ```bash
   docker run -d \
   -e PUID=1001 \
-  -e ALLOW_EMPTY_PASSWORD=no \
+  -e ALLOW_EMPTY_PASSWORD=yes \
   imoize/redis:latest
 ```
 
-### Available environment variables:
+### EXTRA_FLAGS Usage
 
-| Name                      | Description                                            | Default Value |
-| ------------------------- | ------------------------------------------------------ | ------------- |
-| PUID                      | User UID                                               |               |
-| PGID                      | Group GID                                              |               |
-| TZ                        | Specify a timezone see this [list](https://en.wikipedia.org/wiki/List_of_tz_database_time_zones#List).       | UTC          |
-| ALLOW_EMPTY_PASSWORD      | Allow password-less access                             | no            |
-| REDIS_PASSWORD            | Setting the server password on first run.              |               |
-| EXTRA_FLAGS               | Add extra command-line flags to redis-server startup.  |               |
+You can pass extra cmd via environment.
 
-**NOTE:** The at sign (@) is not supported for REDIS_PASSWORD
+```yaml
+redis:
+    ...
+    environment:
+      - PUID=1001
+      - ALLOW_EMPTY_PASSWORD=yes
+      - EXTRA_FLAGS="--maxmemory 128mb --maxmemory-policy allkeys-lru"
+    ...
+```
 
 ### Docker Secrets Support
 
 You can append __FILE (double underscore) to REDIS_PASSWORD. It will be REDIS_PASSWORD__FILE.
+
+```yaml
+services:
+  redis:
+      ...
+      environment:
+        - PUID=1001
+        - ALLOW_EMPTY_PASSWORD=no
+        - REDIS_PASSWORD__FILE="/run/secrets/redis_password"
+      secrets:
+        - redis_password
+
+secrets:
+  redis_password:
+    external: true
+      ...
+```
 
 ## User / Group Identifiers
 
