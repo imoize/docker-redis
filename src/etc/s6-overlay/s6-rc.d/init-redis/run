@@ -51,44 +51,35 @@ fi
 
 # Check if the EXTRA_FLAGS environment variable is set
 if [ -n "$EXTRA_FLAGS" ]; then
-    # Create or read the Redis local configuration file
     redis_local_config="/config/redis/redis-local.conf"
 
-    # Store the key-value pairs from the EXTRA_FLAGS environment variable
-    EXTRA_FLAGS="$EXTRA_FLAGS"
+    EXTRA_FLAGS=$(echo "$EXTRA_FLAGS" | sed 's/^["'\'']\(.*\)["'\'']$/\1/')
 
-    # Split the EXTRA_FLAGS variable into key-value pairs using whitespace as the delimiter
     IFS=' ' read -ra EXTRA_FLAGS_ARRAY <<< "$EXTRA_FLAGS"
 
-    # Read the existing keys from the Redis local configuration file
     existing_keys=($(awk '{print $1}' "$redis_local_config"))
 
-    # Delete keys from the configuration file if they are not in the EXTRA_FLAGS environment variable
     for existing_key in "${existing_keys[@]}"; do
-    if [[ "${EXTRA_FLAGS}" != *"--$existing_key "* ]]; then
-        sed -i "/^$existing_key /d" "$redis_local_config"
-        echo "$info ==> Deleted Extra Flags $existing_key from $redis_local_config."
-    fi
+        if [[ "${EXTRA_FLAGS}" != *"--$existing_key "* ]]; then
+            sed -i "/^$existing_key /d" "$redis_local_config"
+            echo "$info ==> Deleted Extra Flags $existing_key from $redis_local_config."
+        fi
     done
 
-    # Loop through the key-value pairs in EXTRA_FLAGS and append new keys and values
     key=""
     for item in "${EXTRA_FLAGS_ARRAY[@]}"; do
-    if [[ "$item" == "--"* ]]; then
-        # Remove leading "--" from the key
-        key="${item:2}"
-    elif [ -n "$key" ]; then
-        value="$item"
-        # Check if the key already exists in the Redis local configuration file
-        if grep -q "^$key " "$redis_local_config"; then
-        echo "$info ==> Extra Flags $key already exists in $redis_local_config. Skipping..."
-        else
-        # Append the key and value to the Redis local configuration file
-        echo "$key $value" >> "$redis_local_config"
-        echo "$info ==> Added Extra Flags $key with value $value to $redis_local_config."
+        if [[ "$item" == "--"* ]]; then
+            key="${item:2}"
+        elif [ -n "$key" ]; then
+            value="$item"
+            if grep -q "^$key " "$redis_local_config"; then
+                echo "$info ==> Extra Flags $key already exists. Skipping..."
+            else
+                echo "$key $value" >> "$redis_local_config"
+                echo "$info ==> Added Extra Flags $key with value $value."
+            fi
+            key=""
         fi
-        key=""
-    fi
     done
     
 else
