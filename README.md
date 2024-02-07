@@ -33,11 +33,15 @@ services:
   redis:
     image: imoize/redis:latest
     container_name: redis
+    ports:
+      - 6379:6379
     environment:
       - PUID=1001
       - PGID=1001
       - TZ=Asia/Jakarta
       - ALLOW_EMPTY_PASSWORD=yes
+    volumes:
+      - /path/to/app/data:/config/redis
     restart: always
 ```
 
@@ -46,10 +50,12 @@ services:
 ```bash
 docker run -d \
   --name=redis \
+  -p 6379:6379
   -e PUID=1001 \
   -e PGID=1001 \
   -e TZ=Asia/Jakarta \
   -e ALLOW_EMPTY_PASSWORD=yes \
+  -v /path/to/app/data:/config/redis \
   --restart always \
   imoize/redis:latest
 ```
@@ -128,6 +134,28 @@ secrets:
     external: true
       ...
 ```
+## Volume
+
+### Persisting your application
+
+If you remove the container all your data will be lost, and the next time you run the image the data and config will be reinitialized. To avoid this loss of data, you should mount a volume that will persist even after the container is removed.
+
+For persistence you should map directory inside container in `/config/redis` path to host directory as data volumes. Application state will persist as long as directory on the host are not removed.
+
+**e.g:** `/path/to/app/data:/config/redis`
+
+```yaml
+redis:
+    ...
+    environment:
+      - PUID=1001
+      - ALLOW_EMPTY_PASSWORD=yes
+    volumes:
+      - /path/to/app/data:/config/redis
+    ...
+```
+
+`/config/redis` folder contains redis relevant configuration files.
 
 ## User / Group Identifiers
 
